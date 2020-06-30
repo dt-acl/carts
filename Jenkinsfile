@@ -70,6 +70,22 @@ pipeline {
         }
       }
     }
+    stage('DT Deploy Event') {
+      steps {
+        container("curl") {
+          script {
+            tagMatchRules[0].tags[0].value = "${env.APP_NAME}"
+            def status = pushDynatraceDeploymentEvent (
+              tagRule : tagMatchRules,
+              customProperties : [
+                [key: 'Jenkins Build Number', value: "${env.BUILD_ID}"],
+                [key: 'Git commit', value: "${env.GIT_COMMIT}"]
+              ]
+            )
+          }
+        }
+      }
+    }
     stage('Run health check in dev') {
       when {
         expression {
@@ -169,22 +185,6 @@ pipeline {
             string(name: 'TAG_STAGING', value: "${env.TAG_STAGING}"),
             string(name: 'VERSION', value: "${env.VERSION}")
           ]
-      }
-    }
-    stage('DT Deploy Event') {
-      steps {
-        container("curl") {
-          script {
-            tagMatchRules[0].tags[0].value = "${env.APP_NAME}"
-            def status = pushDynatraceDeploymentEvent (
-              tagRule : tagMatchRules,
-              customProperties : [
-                [key: 'Jenkins Build Number', value: "${env.BUILD_ID}"],
-                [key: 'Git commit', value: "${env.GIT_COMMIT}"]
-              ]
-            )
-          }
-        }
       }
     }
   }
